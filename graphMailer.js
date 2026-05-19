@@ -1,5 +1,7 @@
 const { Client } = require("@microsoft/microsoft-graph-client");
 var { ClientSecretCredential } = require("@azure/identity");
+var path = require("path");
+const { nanoid } = require("nanoid");
 
 // require("isomorphic-fetch");
 
@@ -242,8 +244,55 @@ async function mailNotification(request) {
   }
 }
 
+// upload a file unto onedrive
+async function uploadFile(request, response) {
+  // const { proposal_id } = request.body;
+  const proposal_id = nanoid(10);
+  console.log("called");
+  try {
+    const file = request.file;
+    const extention = path.extname(file.originalname);
+    const fileName = `${proposal_id}-${Date.now()}${extention}`;
+
+    // upload to onedrive
+    const responseFrom = await client
+      .api(
+        `/users/${process.env.ONEDRIVE_EMAIL}/drive/root:/Uploads/${fileName}:/content`,
+      )
+      .put(file.buffer);
+    const itemId = responseFrom.id;
+
+    //const fileUrl = responseFrom.webUrl;
+    // create share link
+    const sharing = await client
+      .api(
+        `/users/${process.env.ONEDRIVE_EMAIL}/drive/items/${itemId}/createLink`,
+      )
+      .post({
+        type: "view",
+        scope: "anonymous", // or "organization"
+      });
+
+    const fileUrl = responseFrom["@microsoft.graph.downloadUrl"];
+    console.log(fileUrl);
+    response.status(200).json({
+      success: true,
+      url: fileUrl,
+      name: fileName,
+    });
+  } catch (error) {
+    console.error(error);
+
+    response.status(500).json({
+      success: false,
+      message: "Upload failed",
+    });
+  }
+}
+
 module.exports = {
   mailNotification,
   sendPasswordResetEmail,
   otpNotification,
+  uploadFile,
 };
