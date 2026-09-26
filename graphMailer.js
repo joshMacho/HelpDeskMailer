@@ -189,7 +189,7 @@ async function mailNotification(request) {
           <!-- Expiry -->
           <tr>
             <td style="color:#888; font-size:13px; text-align:center;">
-              This link is valid for <strong>6 hours</strong>.
+              This link is valid for <strong>${process.env.LINK_EXPIRE} Days</strong>.
             </td>
           </tr>
 
