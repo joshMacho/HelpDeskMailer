@@ -138,6 +138,19 @@ async function otpNotification(to, name, period, OTP) {
     },
     saveToSentItems: false,
   };
+
+  try {
+    const mailer = await client
+      .api(`/users/${process.env.MAIL_FROM}/sendMail`)
+      .post(message);
+    return { success: true, data: mailer };
+  } catch (error) {
+    console.log(
+      `Error from sending proposal notification: to: ${to}, - `,
+      error,
+    );
+    return { success: false, error: error.message };
+  }
 }
 
 // send email link notification
